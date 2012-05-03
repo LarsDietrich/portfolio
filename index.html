@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<link href='http://fonts.googleapis.com/css?family=Press+Start+2P' rel='stylesheet' type='text/css'>
+	<link rel="stylesheet" href="css/style.css">
+	<link rel="stylesheet" href="css/tipsy.css">
+	
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+	<script src="http://gsgd.co.uk/sandbox/jquery/easing/jquery.easing.1.3.js"></script>
+	<script src="js/jquery.tipsy.js"></script>
+	<script src="js/jquery.scrollTo.js"></script>
+	<script src="js/classes/ProjectCollection.class.js"></script>
+
+	<script>
+		$(function(){
+			
+			var homeContent = $('#content').html();
+			var currentPage = 'home';
+			
+			
+				
+			initClickHandlers();
+			initTags();
+			initLavaNavigation();
+			
+			function initClickHandlers(){
+				$('#home').click(function(e){
+					e.preventDefault();
+					var currentPage = 'home';
+					$('#content').empty().append(homeContent);
+					initTags();
+				});
+				
+				$('#projects').click(function(e){
+					var currentPage = 'projects';
+					e.preventDefault();
+					
+					$.get('php/getProjects.php', function(data){
+						console.log(data);
+						$('#content').empty();
+						
+						$(data).each(function(){
+							$('#content').append('<div class="project"><h3>' + this.nameProject + '</h3><div class="projectLogoCont"><img src="img/' + this.logoImg + '" /></div><p class="descriptionMain">' + this.descriptionMain + '</p></div>');	
+							
+							$('.project:last').attr('id', this.id);
+							
+							//ON CLICK
+							$('.project:last').click(getProjectDetails);
+
+							//ON MOUSEOVER
+							$('.project:last').mouseover(function(e){
+								
+								if($(e.currentTarget).data('active') == false)
+									$(e.currentTarget).tipsy('show');
+							});
+							
+							//ON MOUSEOUTs
+							$('.project:last').mouseout(function(e){
+								
+								$(e.currentTarget).tipsy('hide');
+							});
+							
+							$('.project:last').tipsy({gravity: 'w', trigger: 'manual', fallback: "Click -> more info!", opacity: 1.0});
+							$('.project:last').data('active', false);
+						
+						});
+						
+					}, 'json');
+
+					$('#content').fadeOut(0).fadeIn(200);
+				});
+			}
+			
+			function getProjectDetails(e){
+
+				if($(e.currentTarget).data('active') == false){
+
+					var $projectElement = $(e.currentTarget);
+					
+					//Load JSON-encoded data from server trough GET.
+					$.getJSON('php/getProject.php?id=' + $projectElement.attr('id'), function(data){
+						
+						var oldProjectLogoCont;
+						
+						$projectElement.find('.projectLogoCont').html(function(i, o){
+							oldProjectLogoCont = o;
+							return '<img src="img/' + data.mainImg + '" />';
+						});
+						
+						//Append HTML.
+						$projectElement.append('<div class="imageCounterCont"><div class="imageCounterBullet"></div><div class="imageCounterBullet"></div><div class="clearFix"></div></div><h5 class="projectIntro">' + data.descriptionMain + '</h5><p>' + data.descriptionDetails + '</p><div class="projectButtonCont"><span class="blueBtn">Play DEMO</span><span class="closeBtn">Close project</span></div>').data('active', true).attr('class', 'projectDetails').tipsy("hide");
+						
+						//ON CLICK demo-button.
+						$('.blueBtn').mousedown(function(e){
+							window.open('swf/flashTestBed.php?demoId=' + $projectElement.attr('id'));
+						});
+						
+						//ON CLICK close-button.
+						$('.closeBtn').mousedown(function(e){
+							$.scrollTo($projectElement.position().top, 0);
+							$projectElement.attr('class', 'project').data('active', false);;
+							$projectElement.find('.imageCounterCont').nextAll().andSelf().remove();
+							$projectElement.find('.projectLogoCont').html(oldProjectLogoCont);
+						});
+					}, 'json');
+					
+					$.scrollTo($($projectElement).position().top, 150);
+				}
+			}
+			
+			function initTags(){
+				
+				var tagsArray = new Array('HTML5', 'CSS3', 'OOP-JavaScript', 'jQuery', 'PHP5', 'SQL', 'Databases', 'OOP-ActionScript 3.0', 'OOP-C#', 'MVC');
+				
+				for(tag in tagsArray){
+					$('#tags').append('<span style="display: none;">' + tagsArray[tag] + '</span>').append('<p class="tag" style="font-size: 12pt; width: ' + $('#tags span:last').width() + 'px;">' + tagsArray[tag] + '</p>');
+					
+					if(tag % 2 == 0)
+						$('#tags p:last').css({'background':'-webkit-linear-gradient(top, #2266ff, #0044dd)'});
+				}
+			}
+			
+			function initLavaNavigation(){
+				$('body').append('<div id="lavaParticle"></div>');
+				$('#lavaParticle').css({'left': $('header > a:first').position().left + 20, 'top': ($('header > a:first').position().top + $('header > a:first').height()) , 'width': $('header > a:first').width()});
+
+				$('header a').mouseover(function(e){
+					var xDiff = ($(e.currentTarget).position().left - $('#lavaParticle').position().left + 20)
+					$('#lavaParticle').stop().animate({left: '+=' + xDiff, width: $(e.currentTarget).width()}, 100, 'easeOutSine');		
+				});
+				
+				$('header a').mouseout(function(e){
+					//var xDiff = ($(e.currentTarget).position().left - $('#lavaParticle').position().left + 20)
+					//$('#lavaParticle').stop().animate({left: '+=' + xDiff, width: $(e.currentTarget).width()}, 100, 'easeOutSine');
+					if(currentPage == 'home'){
+						var xDiff = ($('header a:nth-child(2)').position().left - $('#lavaParticle').position().left + 20);
+						$('#lavaParticle').stop().animate({left: '+=' + xDiff, width: $('header a:nth-child(2)').width()}, 500, 'easeOutSine');
+					}
+				});
+			}
+		});
+	</script>
+</head>
+<body>
+<div id="wrapper">	
+	<header>
+		<h1>JOEY HOOGERWERF</h1>
+		<a id="home" href="#">WH0 AM I?</a>
+		<a id="projects" href="#">MY PR0JECTS!</a>
+		<a id="contact" href="#">C0NTACT</a>
+	</header>
+	
+	<div id="content">
+		<div id="foo">
+		<p>Welcome, my name is Joey Hoogerwerf and I am software developer from The Netherlands.</p>
+		<p>These tags describe my knowledge in the workfield.</p>
+				<div id="tags"></div>
+		</div>
+		<img id="logo" src="img/me1.png" />
+
+		<div class="clearFix"></div>
+	</div>
+	<footer>
+		<p><span>&copy;</span> 2012</p>
+	</footer>
+</div>
+</body>
+</html>
