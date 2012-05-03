@@ -81,7 +81,7 @@
 					$.getJSON('php/getProject.php?id=' + $projectElement.attr('id'), function(data){
 						
 						var oldProjectLogoCont;
-						
+						//console.log('project: ' + data.images);
 						$projectElement.find('.projectLogoCont').html(function(i, o){
 							oldProjectLogoCont = o;
 							return '<img src="img/' + data.mainImg + '" />';
